@@ -19,3 +19,8 @@ export const PickerStateEnum = {
 } as const
 
 export type PickerState = (typeof PickerStateEnum)[keyof typeof PickerStateEnum]
+
+export interface CapturedFace {
+  dataUrl: string
+  label: string
+}
