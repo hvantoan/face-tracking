@@ -7,7 +7,7 @@
 
 ## What Is This?
 
-Offline browser app that detects faces via webcam and randomly picks a speaker using roulette-style animation. Vietnamese UI, zero cloud dependencies.
+Offline browser app that detects faces via webcam and randomly picks a speaker using roulette-style animation. On selection, captures the chosen face and shows a full-screen celebration overlay with confetti + sound. Vietnamese UI, zero cloud dependencies.
 
 ## Tech Stack
 
@@ -16,6 +16,7 @@ Offline browser app that detects faces via webcam and randomly picks a speaker u
 | Framework | React 19 + TypeScript 6 |
 | Build | Vite 8 |
 | Face Detection | @vladmandic/human v3 (TFJS/WebGL) |
+| Confetti | canvas-confetti v1.9 |
 | Styling | Tailwind CSS v4 + shadcn/ui |
 | Testing | Vitest 4 + @testing-library/react 16 + jsdom |
 
@@ -32,11 +33,14 @@ src/
     face-box-overlay.tsx      # drawFaceBoxes() canvas renderer
     face-counter.tsx          # "{count} nguoi duoc phat hien"
     random-picker-button.tsx  # CHON / Dang chon... / CHON LAI
+    celebration-overlay.tsx   # Full-screen overlay: zoom-in, auto-dismiss
     ui/button.tsx             # shadcn/ui Button
     __tests__/                # Component render tests (3 files)
   hooks/
     use-face-detection.ts     # Human singleton, RAF loop, webcam start/stop
     use-random-picker.ts      # Roulette spin (ease-out deceleration)
+    use-face-capture.ts       # Capture face from video on picker selection
+    use-celebration.ts        # Fire confetti + sound on selection
     __tests__/                # Hook logic tests (1 file)
   lib/
     human-config.ts           # @vladmandic/human face-only config
@@ -44,10 +48,12 @@ src/
     utils.ts                  # cn() (clsx + tailwind-merge)
     __tests__/                # Config + utility tests (2 files)
   types/
-    face.ts                   # DetectedFace, FaceBoundingBox, PickerStateEnum
+    face.ts                   # DetectedFace, FaceBoundingBox, PickerStateEnum, CapturedFace
+    canvas-confetti.d.ts      # Type declarations for canvas-confetti
     __tests__/                # Type contract tests (1 file)
 public/
   models/                     # blazeface + facemesh model files (offline)
+  assets/celebration.mp3      # Celebration jingle sound
 scripts/
   copy-models.sh             # Copies models from node_modules to public/models/
 ```
@@ -59,6 +65,10 @@ scripts/
 | App.tsx | ~60 | Root component, hook orchestration, layout |
 | use-face-detection.ts | ~139 | Face detection hook (singleton, RAF, AbortController) |
 | use-random-picker.ts | ~83 | Spin animation hook (ease-out, setTimeout-based) |
+| use-face-capture.ts | ~60 | Capture face crop from video on selection |
+| use-celebration.ts | ~31 | Confetti + celebration sound effect |
+| celebration-overlay.tsx | ~72 | Full-screen overlay with zoom-in, auto-dismiss |
+| canvas-confetti.d.ts | ~21 | Type declarations for canvas-confetti |
 | face-box-overlay.tsx | ~58 | Canvas drawing function |
 | webcam-view.tsx | ~40 | Video + canvas composite |
 | random-picker-button.tsx | ~30 | Button with 3 states |
@@ -66,7 +76,7 @@ scripts/
 | human-config.ts | ~35 | @vladmandic/human config object |
 | face-utils.ts | ~3 | Single formatFaceLabel function |
 | utils.ts | ~6 | cn() utility |
-| face.ts | ~21 | Type definitions |
+| face.ts | ~25 | Type definitions (DetectedFace, CapturedFace, etc.) |
 | index.css | ~130 | Tailwind v4 theme (oklch) |
 
 ## Test Coverage
@@ -90,6 +100,8 @@ scripts/
 3. **requestAnimationFrame** for detection loop -- not setInterval
 4. **Debounced picker reset** (500ms) in App.tsx -- prevents flicker when face count fluctuates
 5. **`face.mesh`** (not `face.landmark`) -- correct @vladmandic/human v3 API property
+6. **`key={pickCount}`** on CelebrationOverlay -- forces remount on each new selection so enter animation replays
+7. **Phase-driven overlay** (enter/visible/exit) -- CSS transitions managed by state, not libraries
 
 ## Build Output
 
