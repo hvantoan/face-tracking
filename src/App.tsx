@@ -5,6 +5,7 @@ import { useFaceCapture } from '@/hooks/use-face-capture'
 import { useCelebration } from '@/hooks/use-celebration'
 import { WebcamView } from '@/components/webcam-view'
 import { AppSidebar } from '@/components/app-sidebar'
+import { MobilePortraitOverlay, MobileLandscapeOverlay } from '@/components/mobile-overlay'
 import { CelebrationOverlay } from '@/components/celebration-overlay'
 
 export default function App() {
@@ -41,9 +42,42 @@ export default function App() {
     prevFaceCountRef.current = faces.length
   }, [faces.length, pickerState, reset])
 
+  const pickerDisabled = faces.length === 0 && pickerState === 'idle'
+
   return (
-    <div className="min-h-svh flex flex-col-reverse md:flex-row bg-background text-foreground">
-      {/* Sidebar: controls on bottom (mobile) / left (desktop) */}
+    <div className="min-h-dvh bg-black overflow-hidden lg:flex">
+      {/* Camera area — full screen on mobile, flex-1 on desktop */}
+      <main className="relative min-h-dvh lg:min-h-0 lg:flex-1 lg:flex lg:items-center lg:justify-center lg:p-4">
+        <WebcamView
+          videoRef={videoRef}
+          faces={faces}
+          highlightedIndex={highlightedIndex}
+          selectedIndex={selectedIndex}
+          className="absolute inset-0 rounded-none lg:relative lg:aspect-video lg:max-h-[calc(100dvh-2rem)] lg:rounded-xl"
+        />
+
+        {/* Mobile portrait overlay */}
+        <MobilePortraitOverlay
+          pickerState={pickerState}
+          faceCount={faces.length}
+          onPick={triggerPick}
+          disabled={pickerDisabled}
+          isLoading={isLoading}
+          error={error}
+        />
+
+        {/* Mobile landscape overlay */}
+        <MobileLandscapeOverlay
+          pickerState={pickerState}
+          faceCount={faces.length}
+          onPick={triggerPick}
+          disabled={pickerDisabled}
+          isLoading={isLoading}
+          error={error}
+        />
+      </main>
+
+      {/* Desktop glass sidebar (≥1024px) */}
       <AppSidebar
         pickerState={pickerState}
         faceCount={faces.length}
@@ -51,26 +85,17 @@ export default function App() {
         highlightedIndex={highlightedIndex}
         faces={faces}
         onPick={triggerPick}
-        disabled={faces.length === 0 && pickerState === 'idle'}
+        disabled={pickerDisabled}
         isLoading={isLoading}
         error={error}
       />
 
-      {/* Main: video feed */}
-      <main className="flex-1 flex items-center justify-center bg-black min-h-[50vh] md:min-h-svh p-2 md:p-4">
-        <WebcamView
-          videoRef={videoRef}
-          faces={faces}
-          highlightedIndex={highlightedIndex}
-          selectedIndex={selectedIndex}
-          className="md:rounded-xl max-h-[calc(100svh-2rem)]"
-        />
-        <CelebrationOverlay
-          key={pickCount}
-          capturedFace={capturedFace}
-          onDismiss={() => {}}
-        />
-      </main>
+      {/* Celebration overlay — works on all screen sizes */}
+      <CelebrationOverlay
+        key={pickCount}
+        capturedFace={capturedFace}
+        onDismiss={() => {}}
+      />
     </div>
   )
 }
