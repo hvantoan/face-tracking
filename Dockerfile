@@ -4,8 +4,9 @@ FROM node:22-alpine AS build
 WORKDIR /app
 
 # Install dependencies first (layer cache optimization)
-COPY package.json package-lock.json ./
-RUN npm ci
+# Use npm install instead of npm ci for lockfile v3 compatibility across npm versions
+COPY package.json package-lock.json* ./
+RUN npm install --prefer-offline
 
 # Copy source and config
 COPY . .
