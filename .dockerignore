@@ -1,0 +1,15 @@
+node_modules
+dist
+.git
+.gitignore
+.claude
+plans
+docs
+*.md
+!README.md
+repomix-output.xml
+release-manifest.json
+screenshots
+logs.txt
+.env*
+!.env.example
